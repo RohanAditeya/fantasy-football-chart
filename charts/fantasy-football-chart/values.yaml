@@ -1,0 +1,49 @@
+# Argo CD override values.
+argo-cd:
+  configs:
+    params:
+      "server.insecure": true
+    secret:
+      argocdServerAdminPassword: YXJnb19wYXNzd29yZA==
+  crds:
+    keep: false
+  notifications:
+    enabled: false
+  server:
+    ingress:
+      enabled: true
+      hosts:
+        - external.path.to.argocd.io
+      ingressClassName: "contour"
+# Contour Ingress override values.
+contour:
+  namespaceOverride: projectcontour
+  contour:
+    envoyServiceNamespace: projectcontour
+# Prometheus configurations
+prometheus:
+  forceNamespace: prometheus
+  # alert manager is a dependency to prometheus chart
+  # override values for alert manager chart
+  alertmanager:
+    namespaceOverride: prometheus
+  # kube-state-metrics is a dependency to prometheus chart
+  # override values for kube-state-metrics chart
+  kube-state-metrics:
+    namespaceOverride: prometheus
+  # prometheus-node-exporter is a dependency to prometheus chart
+  # override values for prometheus-node-exporter chart
+  prometheus-node-exporter:
+    namespaceOverride: prometheus
+  # prometheus-pushgateway is a dependency to prometheus chart
+  # override values for prometheus-pushgateway chart
+  prometheus-pushgateway:
+    namespaceOverride: prometheus
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: "contour"
+      hosts:
+        - prometheus.domain.com
+    persistentVolume:
+      size: 1Gi
