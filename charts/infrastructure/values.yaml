@@ -1,0 +1,83 @@
+# Argo CD override values.
+argo-cd:
+  configs:
+    params:
+      "server.insecure": true
+      "server.disable.auth": true
+    secret:
+      argocdServerAdminPassword: argo_password
+  crds:
+    keep: false
+  notifications:
+    enabled: false
+  server:
+    ingress:
+      enabled: true
+      hosts:
+        - external.path.to.argocd.io
+      ingressClassName: "nginx"
+# Prometheus configurations
+prometheus:
+  forceNamespace: sre
+  # alert manager is a dependency to prometheus chart
+  # override values for alert manager chart
+  alertmanager:
+    namespaceOverride: sre
+  # kube-state-metrics is a dependency to prometheus chart
+  # override values for kube-state-metrics chart
+  kube-state-metrics:
+    namespaceOverride: sre
+  # prometheus-node-exporter is a dependency to prometheus chart
+  # override values for prometheus-node-exporter chart
+  prometheus-node-exporter:
+    namespaceOverride: sre
+  # prometheus-pushgateway is a dependency to prometheus chart
+  # override values for prometheus-pushgateway chart
+  prometheus-pushgateway:
+    namespaceOverride: sre
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      hosts:
+        - prometheus.domain.com
+    persistentVolume:
+      size: 1Gi
+# Grafana dependency override values
+grafana:
+  namespaceOverride: sre
+  adminUser: admin
+  adminPassword: admin
+  persistence:
+    size: 1Gi
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hosts:
+      - grafana.domain.com
+# Ingress-nginx controller override values
+ingress-nginx:
+  namespaceOverride: ingress-nginx
+  tcp:
+    26257: "cockroach/cockroach-cockroachdb-public:26257"
+# cockroach dependency override values
+cockroachdb:
+  statefulset:
+    replicas: 2
+    resources:
+      limits:
+        memory: 2Gi
+      requests:
+        memory: 2Gi
+  tls:
+    enabled: false
+  ingress:
+    enabled: true
+    hosts:
+      - cockroach.domain.com
+  storage:
+    persistentVolume:
+      size: 2Gi
+  conf:
+    single-node: false
+    cluster-name: fantasy-football

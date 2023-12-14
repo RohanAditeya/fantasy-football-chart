@@ -1,2 +1,4 @@
 /fantasy-football-chart.iml
 /.idea/
+**/Chart.lock
+**/charts/**/charts
