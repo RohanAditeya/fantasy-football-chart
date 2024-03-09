@@ -59,7 +59,7 @@ grafana:
 ingress-nginx:
   namespaceOverride: ingress-nginx
   tcp:
-    26257: "cockroach/cockroach-cockroachdb-public:26257"
+    26257: "cockroach/cloud-cockroachdb-public:26257" # Has to be in format {release name}-cockroachdb-public:26257
 # cockroach dependency override values
 cockroachdb:
   statefulset:
