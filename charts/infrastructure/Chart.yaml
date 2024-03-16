@@ -32,6 +32,9 @@ dependencies:
   - name: grafana
     version: 7.0.x
     repository: https://grafana.github.io/helm-charts
-  - name: cockroachdb
-    version: 11.2.x
-    repository: https://charts.cockroachdb.com/
+  - name: postgresql
+    version: 14.3.x
+    repository: https://charts.bitnami.com/bitnami
+  - name: spring-cloud-dataflow
+    version: 26.10.x
+    repository: https://charts.bitnami.com/bitnami

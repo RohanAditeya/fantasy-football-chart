@@ -1,21 +1,3 @@
-# Argo CD override values.
-argo-cd:
-  configs:
-    params:
-      "server.insecure": true
-      "server.disable.auth": true
-    secret:
-      argocdServerAdminPassword: argo_password
-  crds:
-    keep: false
-  notifications:
-    enabled: false
-  server:
-    ingress:
-      enabled: true
-      hosts:
-        - external.path.to.argocd.io
-      ingressClassName: "nginx"
 # Prometheus configurations
 prometheus:
   forceNamespace: sre
@@ -59,25 +41,76 @@ grafana:
 ingress-nginx:
   namespaceOverride: ingress-nginx
   tcp:
-    26257: "cockroach/cloud-cockroachdb-public:26257" # Has to be in format {release name}-cockroachdb-public:26257
-# cockroach dependency override values
-cockroachdb:
-  statefulset:
-    replicas: 2
+    5432: "postgres/cloud-postgresql:5432"
+# PostgreSQL DB properties
+postgresql:
+  fullnameOverride: cloud-postgresql
+  architecture: standalone
+  auth:
+    database: fantasy_football
+    postgresPassword: "admin"
+  primary:
+    ingress:
+      hosts:
+        - host: postgresql.domain.com
+          paths:
+            - path: /
+              pathType: Prefix
+    ingressClassName: "nginx"
+    name: fantasy_football_primary
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 1Gi
+    networkPolicy:
+      enabled: false
+    persistence:
+      size: 2Gi
+spring-cloud-dataflow:
+  namespaceOverride: data-flow
+  server:
     resources:
       limits:
-        memory: 2Gi
+        memory: 1Gi
+        cpu: 500m
       requests:
-        memory: 2Gi
-  tls:
+        memory: 1Gi
+        cpu: 500m
+    ingress:
+      enabled: true
+      hostname: dataflow.domain.com
+      ingressClassName: nginx
+  skipper:
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+  deployer:
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+  mariadb:
     enabled: false
-  ingress:
-    enabled: true
-    hosts:
-      - cockroach.domain.com
-  storage:
-    persistentVolume:
-      size: 2Gi
-  conf:
-    single-node: false
-    cluster-name: fantasy-football
+  externalDatabase:
+    host: cloud-postgresql.postgres.svc.cluster.local
+    port: 5432
+    driver: org.postgresql.Driver
+    scheme: postgresql
+    password: admin
+    dataflow:
+      database: fantasy_football
+      username: postgres
+    skipper:
+      database: fantasy_football
+      username: postgres
+    hibernateDialect: org.hibernate.dialect.CockroachDialect
+  rabbitmq:
+    enabled: false
