@@ -81,6 +81,8 @@ spring-cloud-dataflow:
       enabled: true
       hostname: dataflow.domain.com
       ingressClassName: nginx
+    configuration:
+      accountName: fantasy-football
   skipper:
     resources:
       limits:
@@ -111,6 +113,6 @@ spring-cloud-dataflow:
     skipper:
       database: fantasy_football
       username: postgres
-    hibernateDialect: org.hibernate.dialect.CockroachDialect
+    hibernateDialect: org.hibernate.dialect.PostgreSQLDialect
   rabbitmq:
     enabled: false
