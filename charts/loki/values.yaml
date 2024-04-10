@@ -1,0 +1,96 @@
+##########################################################################
+#
+#
+#    Grafana Loki Config
+#
+#
+##########################################################################
+loki:
+  chunksCache:
+    enabled: false
+  lokiCanary:
+    enabled: false
+  fullnameOverride: grafana-loki
+  backend:
+    replicas: 1
+    persistence:
+      size: 1Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  gateway:
+    ingress:
+      tls:
+      enabled: true
+      hosts: [
+        {
+          "host": "gateway-loki.domain.com",
+          "paths": [
+            {
+              "path": "/",
+              "pathType": Prefix
+            }
+          ]
+        }
+      ]
+      ingressClassName: nginx
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  loki:
+    auth_enabled: false
+    useTestSchema: true
+  ingress:
+    enabled: true
+    hosts[0]: grafana-loki.domain.com
+    ingressClassName: nginx
+  monitoring:
+    lokiCanary:
+      enabled: false
+    selfMonitoring:
+      enable: false
+      metricsInstance:
+        enabled: false
+  read:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  singleBinary:
+    persistence:
+      size: 1Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  tableManager:
+    enabled: false
+  write:
+    persistence:
+      size: 1Gi
+    replicas: 1
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  test: {"enabled": false}
+tempo:
+  fullnameOverride: tempo

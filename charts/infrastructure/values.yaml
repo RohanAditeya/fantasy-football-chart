@@ -1,5 +1,12 @@
-# Prometheus configurations
+##########################################################################
+#
+#
+#    Prometheus config
+#
+#
+##########################################################################
 prometheus:
+  fullnameOverride: prometheus
   forceNamespace: sre
   # alert manager is a dependency to prometheus chart
   # override values for alert manager chart
@@ -25,8 +32,15 @@ prometheus:
         - prometheus.domain.com
     persistentVolume:
       size: 1Gi
-# Grafana dependency override values
+##########################################################################
+#
+#
+#    Grafana config
+#
+#
+##########################################################################
 grafana:
+  fullnameOverride: grafana
   namespaceOverride: sre
   adminUser: admin
   adminPassword: admin
@@ -37,36 +51,25 @@ grafana:
     ingressClassName: "nginx"
     hosts:
       - grafana.domain.com
-# Ingress-nginx controller override values
+##########################################################################
+#
+#
+#    Ingress Nginx server config
+#
+#
+##########################################################################
 ingress-nginx:
+  fullnameOverride: ingress-nginx
   namespaceOverride: ingress-nginx
   tcp:
     5432: "postgres/cloud-postgresql:5432"
-# PostgreSQL DB properties
-postgresql:
-  fullnameOverride: cloud-postgresql
-  architecture: standalone
-  auth:
-    database: fantasy_football
-    postgresPassword: "admin"
-  primary:
-    ingress:
-      hosts:
-        - host: postgresql.domain.com
-          paths:
-            - path: /
-              pathType: Prefix
-    ingressClassName: "nginx"
-    name: fantasy_football_primary
-    resources:
-      requests:
-        memory: 1Gi
-      limits:
-        memory: 1Gi
-    networkPolicy:
-      enabled: false
-    persistence:
-      size: 2Gi
+##########################################################################
+#
+#
+#    Spring cloud data flow configs
+#
+#
+##########################################################################
 spring-cloud-dataflow:
   namespaceOverride: data-flow
   server:
@@ -115,4 +118,107 @@ spring-cloud-dataflow:
       username: postgres
     hibernateDialect: org.hibernate.dialect.PostgreSQLDialect
   rabbitmq:
+    enabled: false
+##########################################################################
+#
+#
+#   Postgres Configs
+#
+#
+##########################################################################
+postgresql:
+  fullnameOverride: cloud-postgresql
+  architecture: standalone
+  auth:
+    database: fantasy_football
+    postgresPassword: "admin"
+  primary:
+    ingress:
+      hosts:
+        - host: postgresql.domain.com
+          paths:
+            - path: /
+              pathType: Prefix
+    ingressClassName: "nginx"
+    name: fantasy_football_primary
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 1Gi
+    networkPolicy:
+      enabled: false
+    persistence:
+      size: 1Gi
+##########################################################################
+#
+#
+#    Argo CD Configs
+#
+#
+##########################################################################
+argo-cd:
+  crds:
+    keep: false
+  fullnameOverride: argo-cd
+  global:
+    domain: argocd.domain.com
+    image:
+      imagePullPolicy: Always
+    logging:
+      format: json
+  configs:
+    params:
+      "server.insecure": true
+    secret:
+      argocdServerAdminPassword: $2a$04$WLAz4NxM7uxh4EbEDwyvUe7dkMTYCMpdfbdTuSKELv8suyHV4SuH6
+  repoServer:
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  server:
+    ingress:
+      enabled: true
+      hostname: argocd-server.domain.com
+      ingressClassName: nginx
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  dex:
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  redis:
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  applicationSet:
+    ingress:
+      enabled: true
+      hostname: argocd-applicationset.domain.com
+      ingressClassName: nginx
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  notifications:
     enabled: false
