@@ -48,6 +48,8 @@ loki:
   loki:
     auth_enabled: false
     useTestSchema: true
+    commonConfig:
+      replication_factor: 1
   ingress:
     enabled: true
     hosts[0]: grafana-loki.domain.com

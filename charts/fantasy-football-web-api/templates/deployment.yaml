@@ -42,6 +42,35 @@ spec:
               value: -Dspring.profiles.active=dev
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: log-path
+              mountPath: /app/logs/
+        - name: fluentbit
+          image: fluent/fluent-bit:3.0.1-debug
+          resources:
+            requests:
+              cpu: 100m
+              memory: 250Mi
+            limits:
+              cpu: 100m
+              memory: 250Mi
+          command:
+            - /fluent-bit/bin/fluent-bit
+          args:
+            - --workdir=/fluent-bit/etc
+            - --config=/fluent-bit/etc/conf/fluent-bit.conf
+          volumeMounts:
+            - name: log-path
+              mountPath: /app/logs
+            - name: fluent-config
+              mountPath: /fluent-bit/etc/conf/fluent-bit.conf
+              subPath: conf/fluent-bit.conf
+            - name: multiline-parser-config
+              mountPath: /fluent-bit/etc/conf/multiline-parser.conf
+              subPath: multiline-parser/multiline-parser.conf
+            - name: parser-config
+              mountPath: /fluent-bit/etc/conf/parsers.conf
+              subPath: parsers/parsers.conf
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -54,6 +83,27 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: log-path
+          emptyDir: { }
+        - name: fluent-config
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: fluent-bit.conf
+                path: conf/fluent-bit.conf
+        - name: parser-config
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: parsers.conf
+                path: parsers/parsers.conf
+        - name: multiline-parser-config
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: multiline-parser.conf
+                path: multiline-parser/multiline-parser.conf
   strategy:
     rollingUpdate:
       maxSurge: {{ add1 .Values.replicaCount }}
