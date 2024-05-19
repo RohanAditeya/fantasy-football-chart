@@ -26,15 +26,9 @@ dependencies:
   - name: ingress-nginx
     version: 4.8.x
     repository: https://kubernetes.github.io/ingress-nginx
-  - name: prometheus
-    version: 25.19.x
-    repository: https://prometheus-community.github.io/helm-charts
-  - name: grafana
-    version: 7.0.x
-    repository: https://grafana.github.io/helm-charts
+  - name: opentelemetry-collector
+    version: 0.90.x
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   - name: postgresql
     version: 15.1.x
     repository: https://charts.bitnami.com/bitnami
-#  - name: spring-cloud-dataflow
-#    version: 26.10.x
-#    repository: https://charts.bitnami.com/bitnami

@@ -27,26 +27,10 @@ spec:
       serviceAccountName: {{ include "kube.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          env:
-            - name: JAVA_OPTS
-              value: -Dspring.profiles.active=dev
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: log-path
-              mountPath: /app/logs/
+      initContainers:
         - name: fluentbit
-          image: fluent/fluent-bit:3.0.1-debug
+          image: fluent/fluent-bit:latest
+          restartPolicy: Always
           resources:
             requests:
               cpu: 100m
@@ -54,6 +38,19 @@ spec:
             limits:
               cpu: 100m
               memory: 250Mi
+          env:
+            - name: OTLP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: otlp-secret
+                  optional: false
+            - name: OTLP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: otlp-secret
+                  optional: false
           command:
             - /fluent-bit/bin/fluent-bit
           args:
@@ -71,6 +68,21 @@ spec:
             - name: parser-config
               mountPath: /fluent-bit/etc/conf/parsers.conf
               subPath: parsers/parsers.conf
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: log-path
+              mountPath: /app/logs/
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

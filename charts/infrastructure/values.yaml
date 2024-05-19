@@ -1,59 +1,6 @@
 ##########################################################################
 #
 #
-#    Prometheus config
-#
-#
-##########################################################################
-prometheus:
-  fullnameOverride: prometheus
-  forceNamespace: sre
-  # alert manager is a dependency to prometheus chart
-  # override values for alert manager chart
-  alertmanager:
-    namespaceOverride: sre
-  # kube-state-metrics is a dependency to prometheus chart
-  # override values for kube-state-metrics chart
-  kube-state-metrics:
-    namespaceOverride: sre
-  # prometheus-node-exporter is a dependency to prometheus chart
-  # override values for prometheus-node-exporter chart
-  prometheus-node-exporter:
-    namespaceOverride: sre
-  # prometheus-pushgateway is a dependency to prometheus chart
-  # override values for prometheus-pushgateway chart
-  prometheus-pushgateway:
-    namespaceOverride: sre
-  server:
-    ingress:
-      enabled: true
-      ingressClassName: "nginx"
-      hosts:
-        - prometheus.domain.com
-    persistentVolume:
-      size: 1Gi
-##########################################################################
-#
-#
-#    Grafana config
-#
-#
-##########################################################################
-grafana:
-  fullnameOverride: grafana
-  namespaceOverride: sre
-  adminUser: admin
-  adminPassword: admin
-  persistence:
-    size: 1Gi
-  ingress:
-    enabled: true
-    ingressClassName: "nginx"
-    hosts:
-      - grafana.domain.com
-##########################################################################
-#
-#
 #    Ingress Nginx server config
 #
 #
@@ -63,62 +10,6 @@ ingress-nginx:
   namespaceOverride: ingress-nginx
   tcp:
     5432: "postgres/cloud-postgresql:5432"
-##########################################################################
-#
-#
-#    Spring cloud data flow configs
-#
-#
-##########################################################################
-spring-cloud-dataflow:
-  namespaceOverride: data-flow
-  server:
-    resources:
-      limits:
-        memory: 1Gi
-        cpu: 500m
-      requests:
-        memory: 1Gi
-        cpu: 500m
-    ingress:
-      enabled: true
-      hostname: dataflow.domain.com
-      ingressClassName: nginx
-    configuration:
-      accountName: fantasy-football
-  skipper:
-    resources:
-      limits:
-        memory: 1Gi
-        cpu: 500m
-      requests:
-        memory: 1Gi
-        cpu: 500m
-  deployer:
-    resources:
-      limits:
-        memory: 1Gi
-        cpu: 500m
-      requests:
-        memory: 1Gi
-        cpu: 500m
-  mariadb:
-    enabled: false
-  externalDatabase:
-    host: cloud-postgresql.postgres.svc.cluster.local
-    port: 5432
-    driver: org.postgresql.Driver
-    scheme: postgresql
-    password: admin
-    dataflow:
-      database: fantasy_football
-      username: postgres
-    skipper:
-      database: fantasy_football
-      username: postgres
-    hibernateDialect: org.hibernate.dialect.PostgreSQLDialect
-  rabbitmq:
-    enabled: false
 ##########################################################################
 #
 #
@@ -153,72 +44,80 @@ postgresql:
 ##########################################################################
 #
 #
-#    Argo CD Configs
+#   Open Telemetry Collector Configs
 #
 #
 ##########################################################################
-argo-cd:
-  crds:
-    keep: false
-  fullnameOverride: argo-cd
-  global:
-    domain: argocd.domain.com
-    image:
-      imagePullPolicy: Always
-    logging:
-      format: json
-  configs:
-    params:
-      "server.insecure": true
-    secret:
-      argocdServerAdminPassword: $2a$04$WLAz4NxM7uxh4EbEDwyvUe7dkMTYCMpdfbdTuSKELv8suyHV4SuH6
-  repoServer:
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 500m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  server:
-    ingress:
-      enabled: true
-      hostname: argocd-server.domain.com
-      ingressClassName: nginx
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 500m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  dex:
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 500m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  redis:
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 500m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  applicationSet:
-    ingress:
-      enabled: true
-      hostname: argocd-applicationset.domain.com
-      ingressClassName: nginx
-    resources:
-      requests:
-        memory: 1Gi
-        cpu: 500m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-  notifications:
-    enabled: false
+opentelemetry-collector:
+  extraEnvs:
+    - name: OTLP_USERNAME
+      valueFrom:
+        secretKeyRef:
+          key: username
+          name: otlp-secret
+          optional: false
+    - name: OTLP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: otlp-secret
+          optional: false
+  mode: deployment
+  image:
+    repository: otel/opentelemetry-collector-k8s
+  command:
+    name: otelcol-k8s
+  fullnameOverride: opentelemetry-collector
+  namespaceOverride: sre
+  config:
+    exporters:
+      otlphttp:
+        auth:
+          authenticator: basicauth/otlp
+        endpoint: https://otlp-gateway-prod-ap-south-1.grafana.net/otlp
+    extensions:
+      health_check:
+        endpoint: ${env:MY_POD_IP}:13133
+      memory_ballast: {}
+      basicauth/otlp:
+        client_auth:
+          username: ${env:OTLP_USERNAME}
+          password: ${env:OTLP_PASSWORD}
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+    processors:
+      batch: { }
+      # If set to null, will be overridden with values based on k8s resource limits
+      memory_limiter: null
+    service:
+      telemetry:
+        metrics:
+          address: ${env:MY_POD_IP}:8888
+      extensions:
+        - health_check
+        - memory_ballast
+        - basicauth/otlp
+      pipelines:
+        metrics:
+          exporters:
+            - otlphttp
+          processors:
+            - batch
+          receivers:
+            - otlp
+        traces:
+          exporters:
+            - otlphttp
+          processors:
+            - batch
+          receivers:
+            - otlp
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
