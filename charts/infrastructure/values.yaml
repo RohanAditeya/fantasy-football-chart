@@ -24,13 +24,6 @@ postgresql:
     database: fantasy_football
     postgresPassword: "admin"
   primary:
-    ingress:
-      hosts:
-        - host: postgresql.domain.com
-          paths:
-            - path: /
-              pathType: Prefix
-    ingressClassName: "nginx"
     name: fantasy_football_primary
     resources:
       requests:
