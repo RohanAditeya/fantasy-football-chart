@@ -18,71 +18,47 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "kube.selectorLabels" . | nindent 8 }}
+        {{- include "kube.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "kube.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
-        - name: fluentbit
-          image: fluent/fluent-bit:latest
-          restartPolicy: Always
-          resources:
-            requests:
-              cpu: 100m
-              memory: 250Mi
-            limits:
-              cpu: 100m
-              memory: 250Mi
-          env:
-            - name: OTLP_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: username
-                  name: otlp-secret
-                  optional: false
-            - name: OTLP_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: otlp-secret
-                  optional: false
-          command:
-            - /fluent-bit/bin/fluent-bit
-          args:
-            - --workdir=/fluent-bit/etc
-            - --config=/fluent-bit/etc/conf/fluent-bit.conf
-          volumeMounts:
-            - name: log-path
-              mountPath: /app/logs
-            - name: fluent-config
-              mountPath: /fluent-bit/etc/conf/fluent-bit.conf
-              subPath: conf/fluent-bit.conf
-            - name: multiline-parser-config
-              mountPath: /fluent-bit/etc/conf/multiline-parser.conf
-              subPath: multiline-parser/multiline-parser.conf
-            - name: parser-config
-              mountPath: /fluent-bit/etc/conf/parsers.conf
-              subPath: parsers/parsers.conf
       containers:
         - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
           volumeMounts:
-            - name: log-path
-              mountPath: /app/logs/
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -95,28 +71,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: log-path
-          emptyDir: { }
-        - name: fluent-config
-          configMap:
-            name: fluent-bit-config
-            items:
-              - key: fluent-bit.conf
-                path: conf/fluent-bit.conf
-        - name: parser-config
-          configMap:
-            name: fluent-bit-config
-            items:
-              - key: parsers.conf
-                path: parsers/parsers.conf
-        - name: multiline-parser-config
-          configMap:
-            name: fluent-bit-config
-            items:
-              - key: multiline-parser.conf
-                path: multiline-parser/multiline-parser.conf
-  strategy:
-    rollingUpdate:
-      maxSurge: {{ add1 .Values.replicaCount }}
-      maxUnavailable: 0
