@@ -3,6 +3,24 @@ entries:
   fantasy-football-web-api:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2025-02-27T17:50:07.21571262Z"
+    description: Chart to deploy fantasy football Web API.
+    digest: e79d1c103c690a6a4bf1a152a858e0c2cb80103240890874b418756069391b8a
+    keywords:
+    - spring boot
+    - kubernetes
+    maintainers:
+    - email: rohan.aditeya@gmail.com
+      name: Rohan Aditeya
+    name: fantasy-football-web-api
+    sources:
+    - https://github.com/RohanAditeya/fantasy-football-web-api
+    type: application
+    urls:
+    - https://github.com/RohanAditeya/fantasy-football-chart/releases/download/fantasy-football-web-api-1.0.1/fantasy-football-web-api-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2025-02-26T17:28:27.003391212Z"
     description: Chart to deploy fantasy football Web API.
     digest: fc2e9eb93789d5ccdfa3008af1e4bdfa29e750803852912d1c84f2e92457d570
@@ -19,4 +37,4 @@ entries:
     urls:
     - https://github.com/RohanAditeya/fantasy-football-chart/releases/download/fantasy-football-web-api-1.0.0/fantasy-football-web-api-1.0.0.tgz
     version: 1.0.0
-generated: "2025-02-26T17:28:27.003397174Z"
+generated: "2025-02-27T17:50:07.21572357Z"
