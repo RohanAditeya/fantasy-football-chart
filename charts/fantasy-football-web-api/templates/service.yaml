@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "kube.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kube.labels" . | nindent 4 }}
 spec:

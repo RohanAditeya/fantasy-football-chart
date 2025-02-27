@@ -62,11 +62,7 @@ resources:
     cpu: 100m
     memory: 512Mi
 
-env:
-  - name: SPRING_R2DBC_PASSWORD
-    value: adminPassword
-  - name: SPRING_LIQUIBASE_PASSWORD
-    value: adminPassword
+env: []
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
